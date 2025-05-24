@@ -1,9 +1,10 @@
-﻿import pygame
+import pygame
 import sys
 import math
 import random
 from pygame import gfxdraw
 from pygame import mixer
+import json
 
 # Инициализация Pygame
 pygame.init()
@@ -27,12 +28,17 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 PURPLE = (128, 0, 128)
 
+
 # Настройки по умолчанию
-settings = {
-    'music_volume': 0.5,
-    'sound_volume': 0.7,
-    'difficulty': 'normal'
-}
+try:
+    with open('settings.json', 'r') as f:
+        settings = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    settings = {
+        'music_volume': 0.5,
+        'sound_volume': 0.7,
+        'difficulty': 'normal'
+    }
 
 # Инициализация экрана
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -338,6 +344,8 @@ def settings_menu():
             if back_button.is_clicked(mouse_pos, event):
                 if sound_enabled:
                     button_sound.play()
+                with open('settings.json', 'w') as f:
+                    json.dump(settings, f, indent=4)  # indent для красивого форматирования
                 return MENU
         
         # Отрисовка
