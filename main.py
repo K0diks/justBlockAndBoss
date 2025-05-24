@@ -320,6 +320,9 @@ def main_menu():
 def settings_menu():
     music_slider = Slider(WIDTH//2 - 100, HEIGHT//2 - 60, 200, 20, 0, 1, settings['music_volume'])
     sound_slider = Slider(WIDTH//2 - 100, HEIGHT//2, 200, 20, 0, 1, settings['sound_volume'])
+    eazy_button = Button(WIDTH//2 - 100, HEIGHT//2 + 80,200,50,"Легкая",BLUE,PURPLE)
+    normal_button = Button(WIDTH//2 - 100, HEIGHT//2 + 80,200,50,"Нормальная",BLUE,PURPLE)
+    hard_button = Button(WIDTH//2 - 100,HEIGHT//2 + 80,200,50,"Сложная",BLUE,PURPLE)
     back_button = Button(WIDTH//2 - 100, HEIGHT//2 + 80, 200, 50, "Назад", BLUE, PURPLE)
     
     while True:
@@ -377,6 +380,9 @@ def settings_menu():
         
         # Кнопка назад
         back_button.draw(screen)
+        eazy_button.draw(screen)
+        normal_button.draw(screen)
+        hard_button.draw(screen)
         
         pygame.display.flip()
         clock.tick(FPS)
