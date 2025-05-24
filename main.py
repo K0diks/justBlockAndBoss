@@ -5,6 +5,7 @@ import random
 from pygame import gfxdraw
 from pygame import mixer
 import json
+import os
 
 # Инициализация Pygame
 pygame.init()
@@ -39,6 +40,10 @@ except (FileNotFoundError, json.JSONDecodeError):
         'sound_volume': 0.7,
         'difficulty': 'normal'
     }
+    # Если использовались настройки по умолчанию, сохраним их в файл
+if not os.path.exists('settings.json'):
+    with open('settings.json', 'w') as f:
+        json.dump(settings, f, indent=4)
 
 # Инициализация экрана
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
