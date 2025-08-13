@@ -7,21 +7,17 @@ from pygame import mixer
 import json
 import os
 
-# Инициализация Pygame
 pygame.init()
 
-# Константы
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 
-# Состояния игры
 MENU = 0
 SETTINGS = 1
 GAME_RUNNING = 2
 GAME_OVER = 3
 GAME_WIN = 4
 
-# Цвета
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -29,8 +25,6 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 PURPLE = (128, 0, 128)
 
-
-# Настройки по умолчанию
 try:
     with open('settings.json', 'r') as f:
         settings = json.load(f)
@@ -40,23 +34,19 @@ except (FileNotFoundError, json.JSONDecodeError):
         'sound_volume': 0.7,
         'difficulty': 'normal'
     }
-    # Если использовались настройки по умолчанию, сохраним их в файл
 if not os.path.exists('settings.json'):
     with open('settings.json', 'w') as f:
         json.dump(settings, f, indent=4)
 
-# Инициализация экрана
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Just Block and Boss")
 clock = pygame.time.Clock()
 
-# Загрузка музыки
 try:
     mixer.init()
-    menu_music = "menu.mp3"  # Замените на свой файл
-    game_music = "music.mp3"  # Замените на свой файл
+    menu_music = "menu.mp3"  
+    game_music = "music.mp3" 
     
-    # Загрузка звуков
     shoot_sound = mixer.Sound("shoot.wav")
     hit_sound = mixer.Sound("hit.wav")
     button_sound = mixer.Sound("button.wav")
@@ -65,7 +55,6 @@ except:
     sound_enabled = False
     print("Звуковая система не загружена!")
 
-# Класс кнопки
 class Button:
     def __init__(self, x, y, width, height, text, color, hover_color):
         self.rect = pygame.Rect(x, y, width, height)
@@ -92,8 +81,7 @@ class Button:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             return self.rect.collidepoint(pos)
         return False
-
-# Класс слайдера для настроек
+        
 class Slider:
     def __init__(self, x, y, width, height, min_val, max_val, initial_val):
         self.rect = pygame.Rect(x, y, width, height)
@@ -104,18 +92,14 @@ class Slider:
         self.handle_rect = pygame.Rect(x, y - 5, 20, height + 10)
         
     def draw(self, surface):
-        # Фон слайдера
         pygame.draw.rect(surface, (50, 50, 50), self.rect, border_radius=5)
         
-        # Заполненная часть
         filled_width = int((self.val - self.min) / (self.max - self.min) * self.rect.width)
         filled_rect = pygame.Rect(self.rect.x, self.rect.y, filled_width, self.rect.height)
         pygame.draw.rect(surface, GREEN, filled_rect, border_radius=5)
         
-        # Контур
         pygame.draw.rect(surface, WHITE, self.rect, 2, border_radius=5)
-        
-        # Ползунок
+
         self.handle_rect.x = self.rect.x + filled_width - 10
         pygame.draw.rect(surface, RED, self.handle_rect, border_radius=5)
         
@@ -134,7 +118,6 @@ class Slider:
             return True
         return False
 
-# Класс пули
 class Projectile:
     def __init__(self, x, y, angle=0, speed=5, size=10, color=(255,0,0)):
         self.x = x
@@ -152,17 +135,13 @@ class Projectile:
         self.y += math.sin(self.angle) * self.speed
     
     def draw(self):
-        # Тень пули
         shadow = pygame.Surface((self.size*2, self.size*2), pygame.SRCALPHA)
         pygame.draw.circle(shadow, (0,0,0,150), (self.size, self.size), self.size//2)
         screen.blit(shadow, (int(self.x) - self.size, int(self.y) - self.size))
         
-        # Свечение
         screen.blit(self.glow_surface, (int(self.x) - self.glow_size, int(self.y) - self.glow_size))
-        # Сама пуля
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.size//2)
 
-# Класс частиц
 class Particle:
     def __init__(self, x, y, color, particle_type="normal"):
         self.x = x
@@ -180,7 +159,6 @@ class Particle:
         self.angle = 0
         self.rotation_speed = random.uniform(-0.1, 0.1)
         
-        # Для эффектных частиц
         if self.type == "special":
             self.size = random.randint(5, 20)
             self.shape = random.choice(["circle", "rect", "star"])
@@ -216,7 +194,6 @@ class Particle:
                     screen, int(self.x), int(self.y), int(current_size), 
                     (*self.color, alpha)
                 )
-                # Добавляем свечение
                 glow_size = current_size * 2
                 glow_surf = pygame.Surface((glow_size*2, glow_size*2), pygame.SRCALPHA)
                 pygame.draw.circle(glow_surf, (*self.color, alpha//3), 
@@ -230,7 +207,6 @@ class Particle:
                         (*self.color, alpha)
                     )
                 elif self.shape == "rect":
-                    # Исправленная версия для прямоугольников
                     s = pygame.Surface((int(current_size*2), int(current_size*2)), pygame.SRCALPHA)
                     pygame.draw.rect(
                         s, 
@@ -254,14 +230,12 @@ class Particle:
                         ))
                     pygame.gfxdraw.filled_polygon(screen, points, (*self.color, alpha))
         except:
-            # Если произошла ошибка при отрисовке, просто пропускаем эту частицу
             pass
 
-# Функции меню
 def main_menu():
-    play_button = Button(WIDTH//2 - 100, HEIGHT//2 - 80, 200, 50, "Играть", BLUE, PURPLE)
-    settings_button = Button(WIDTH//2 - 100, HEIGHT//2, 200, 50, "Настройки", BLUE, PURPLE)
-    quit_button = Button(WIDTH//2 - 100, HEIGHT//2 + 80, 200, 50, "Выход", BLUE, PURPLE)
+    play_button = Button(WIDTH//2 - 100, HEIGHT//2 - 80, 200, 50, "Play", BLUE, PURPLE)
+    settings_button = Button(WIDTH//2 - 100, HEIGHT//2, 200, 50, "Settings", BLUE, PURPLE)
+    quit_button = Button(WIDTH//2 - 100, HEIGHT//2 + 80, 200, 50, "Exit", BLUE, PURPLE)
     
     if sound_enabled:
         pygame.mixer.music.load(menu_music)
@@ -298,17 +272,10 @@ def main_menu():
                 pygame.quit()
                 sys.exit()
         
-        # Отрисовка
         screen.fill(BLACK)
-        
-        # Фоновые звезды
-        
-        # Заголовок
         title_font = pygame.font.Font(None, 72)
         title_text = title_font.render("Just Block and Boss", True, WHITE)
         screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 100))
-        
-        # Кнопки
         play_button.draw(screen)
         settings_button.draw(screen)
         quit_button.draw(screen)
@@ -316,14 +283,13 @@ def main_menu():
         pygame.display.flip()
         clock.tick(FPS)
 
-# Функция настроек
 def settings_menu():
     music_slider = Slider(WIDTH//2 - 100, HEIGHT//2 - 60, 200, 20, 0, 1, settings['music_volume'])
     sound_slider = Slider(WIDTH//2 - 100, HEIGHT//2, 200, 20, 0, 1, settings['sound_volume'])
-    eazy_button = Button(WIDTH//2 - 150, HEIGHT//2 + 80,200,50,"Легкая",BLUE,PURPLE)
-    normal_button = Button(WIDTH//2 - 350, HEIGHT//2 + 80,200,50,"Нормальная",BLUE,PURPLE)
-    hard_button = Button(WIDTH//2 - 550,HEIGHT//2 + 80,200,50,"Сложная",BLUE,PURPLE)
-    back_button = Button(WIDTH//2 - 100, HEIGHT//2 + 150, 200, 50, "Назад", BLUE, PURPLE)
+    eazy_button = Button(WIDTH//2 - 150, HEIGHT//2 + 80,200,50,"Easy",BLUE,PURPLE)
+    normal_button = Button(WIDTH//2 - 350, HEIGHT//2 + 80,200,50,"Normal",BLUE,PURPLE)
+    hard_button = Button(WIDTH//2 - 550,HEIGHT//2 + 80,200,50,"Hard",BLUE,PURPLE)
+    back_button = Button(WIDTH//2 - 100, HEIGHT//2 + 150, 200, 50, "Back", BLUE, PURPLE)
     
     while True:
         mouse_pos = pygame.mouse.get_pos()
@@ -353,20 +319,17 @@ def settings_menu():
                 if sound_enabled:
                     button_sound.play()
                 with open('settings.json', 'w') as f:
-                    json.dump(settings, f, indent=4)  # indent для красивого форматирования
+                    json.dump(settings, f, indent=4) 
                 return MENU
         
-        # Отрисовка
         screen.fill(BLACK)
         
 
         
-        # Заголовок
         title_font = pygame.font.Font(None, 72)
         title_text = title_font.render("Настройки", True, WHITE)
         screen.blit(title_text, (WIDTH//2 - title_text.get_width()//2, 100))
         
-        # Текст слайдеров
         font = pygame.font.Font(None, 36)
         music_text = font.render("Громкость музыки:", True, WHITE)
         sound_text = font.render("Громкость звуков:", True, WHITE)
@@ -374,11 +337,9 @@ def settings_menu():
         screen.blit(music_text, (WIDTH//2 - 100, HEIGHT//2 - 100))
         screen.blit(sound_text, (WIDTH//2 - 100, HEIGHT//2 - 40))
         
-        # Слайдеры
         music_slider.draw(screen)
         sound_slider.draw(screen)
         
-        # Кнопка назад
         back_button.draw(screen)
         eazy_button.draw(screen)
         normal_button.draw(screen)
@@ -387,9 +348,7 @@ def settings_menu():
         pygame.display.flip()
         clock.tick(FPS)
 
-# Инициализация игры
 def init_game():
-    # Создаем фоновую поверхность
     background = pygame.Surface((WIDTH, HEIGHT))
     background.fill((10, 5, 20))
     for _ in range(200):
@@ -397,8 +356,6 @@ def init_game():
         y = random.randint(0, HEIGHT)
         size = random.randint(1, 3)
         pygame.draw.circle(background, (random.randint(50, 150), random.randint(50, 150), random.randint(50, 150)), (x, y), size)
-    
-    # Загружаем игровую музыку
     if sound_enabled:
         pygame.mixer.music.load(game_music)
         pygame.mixer.music.set_volume(settings['music_volume'])
@@ -433,7 +390,6 @@ def init_game():
         'd_pressed': False
     }
 
-# Функции игры
 def draw_health_bar(x, y, width, height, current, max_, is_player=False):
     ratio = current/max_
     fill_width = int(width * ratio)
@@ -587,8 +543,7 @@ def reset_game(game_data):
         pygame.mixer.music.load(game_music)
         pygame.mixer.music.set_volume(settings['music_volume'])
         pygame.mixer.music.play(-1)
-
-# Основной игровой цикл
+        
 def run_game(game_data):
     game_state = GAME_RUNNING
     
@@ -635,7 +590,6 @@ def run_game(game_data):
                     return MENU
         
         if game_state == GAME_RUNNING:
-            # Движение игрока
             move_x = (game_data['d_pressed'] - game_data['a_pressed']) * game_data['player_speed']
             move_y = (game_data['s_pressed'] - game_data['w_pressed']) * game_data['player_speed']
             
@@ -646,21 +600,18 @@ def run_game(game_data):
             game_data['player_x'] += move_x
             game_data['player_y'] += move_y
             
-            # Границы игрока
             game_data['player_x'] = max(0, min(WIDTH-game_data['player_size'], game_data['player_x']))
             game_data['player_y'] = max(0, min(HEIGHT-game_data['player_size'], game_data['player_y']))
             
-            # Движение босса
             game_data['boss_x'] += game_data['boss_speed_x']
             game_data['boss_y'] += game_data['boss_speed_y']
             
-            # Отражение от границ
+
             if game_data['boss_x'] > WIDTH-game_data['boss_size']//2 or game_data['boss_x'] < game_data['boss_size']//2:
                 game_data['boss_speed_x'] *= -1
             if game_data['boss_y'] > HEIGHT//3 or game_data['boss_y'] < game_data['boss_size']//2:
                 game_data['boss_speed_y'] *= -1
             
-            # Обновление здоровья босса
             game_data['boss_health'] -= game_data['health_decay_rate'] * dt
             if game_data['boss_health'] <= 0:
                 game_data['boss_health'] = 0
@@ -673,13 +624,11 @@ def run_game(game_data):
                     count=100
                 )
             
-            # Фазы босса
             if game_data['boss_health'] < game_data['max_boss_health']*0.66:
                 game_data['boss_phase'] = 2
             if game_data['boss_health'] < game_data['max_boss_health']*0.33:
                 game_data['boss_phase'] = 3
             
-            # Атаки босса
             game_data['attack_timer'] += 1
             if game_data['attack_timer'] >= game_data['attack_interval']:
                 game_data['attack_timer'] = 0
@@ -702,12 +651,10 @@ def run_game(game_data):
                     game_data['projectiles']
                 )
             
-            # Обновление пуль
             game_data['projectiles'][:] = [p for p in game_data['projectiles'] if 0 <= p.x <= WIDTH and 0 <= p.y <= HEIGHT]
             for p in game_data['projectiles']:
                 p.update()
                 
-                # Столкновение с игроком
                 if (abs(p.x - (game_data['player_x']+game_data['player_size']//2)) < game_data['player_size']//2 + p.size//2 and 
                    abs(p.y - (game_data['player_y']+game_data['player_size']//2)) < game_data['player_size']//2 + p.size//2):
                     game_data['player_health'] -= 10
@@ -727,27 +674,22 @@ def run_game(game_data):
                         game_data['player_health'] = 0
                         game_state = GAME_OVER
             
-            # Обновление частиц
             game_data['particles'][:] = [p for p in game_data['particles'] if p.life > 0]
             for p in game_data['particles']:
                 p.update()
         
-        # Отрисовка
+
         screen.blit(game_data['background'], (0, 0))
         
-        # Частицы
         for p in game_data['particles']:
             p.draw()
         
         if game_state == GAME_RUNNING:
-            # Здоровье
             draw_health_bar(50, HEIGHT-40, 200, 20, game_data['player_health'], game_data['max_player_health'], True)
             draw_health_bar(WIDTH//2-150, 20, 300, 25, game_data['boss_health'], game_data['max_boss_health'])
             
-            # Игрок
             draw_player(game_data['player_x'], game_data['player_y'], game_data['player_size'])
             
-            # Босс
             draw_boss(
                 game_data['boss_x'],
                 game_data['boss_y'],
@@ -756,7 +698,6 @@ def run_game(game_data):
                 game_data['boss_health'] / game_data['max_boss_health']
             )
             
-            # Пули
             for p in game_data['projectiles']:
                 p.draw()
         
@@ -772,7 +713,6 @@ def run_game(game_data):
         
         pygame.display.flip()
 
-# Функции завершения игры
 def game_over():
     while True:
         for event in pygame.event.get():
@@ -801,7 +741,6 @@ def game_win():
         
         clock.tick(FPS)
 
-# Основной цикл приложения
 def main():
     current_state = MENU
     game_data = None
@@ -826,3 +765,4 @@ if __name__ == "__main__":
     main()
     pygame.quit()
     sys.exit()
+
